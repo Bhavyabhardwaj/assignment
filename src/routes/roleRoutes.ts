@@ -5,9 +5,9 @@ import { getRoles, createRole, updateRole, deleteRole } from "../controllers/rol
 const router = express.Router();
 
 //@ts-ignore
-router.get("/", authenticate, getRoles);
+router.get("/", getRoles);
 //@ts-ignore
-router.post("/", createRole);
+router.post("/", authenticate, createRole);
 //@ts-ignore
 router.patch("/:id", authenticate, updateRole);
 //@ts-ignore
