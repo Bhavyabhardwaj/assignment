@@ -11,7 +11,7 @@ app.use(express.json());
 
 // Routes
 app.use("/api/auth", authRoutes);
-app.use("/api/users", userRoutes);
+app.use("/api/users", userRoutes); // User Routes
 app.use("/api/roles", roleRoutes);
 app.use("/api/permissions", permissionRoutes);
 
