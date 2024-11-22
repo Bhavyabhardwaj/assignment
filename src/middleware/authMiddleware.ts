@@ -2,15 +2,18 @@ import { Request, Response, NextFunction } from "express";
 import { verifyToken } from "../utils/jwtUtils";
 
 export const authenticate = async (req: Request, res: Response, next: NextFunction) => {
-  const token = req.headers.authorization?.split(" ")[1];
-  if (!token) return res.status(401).json({ message: "Unauthorized" });
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
 
+  const token = authHeader.split(" ")[1];
   try {
-    const user = verifyToken(token);
+    const decoded = verifyToken(token);
     //@ts-ignore
-    req.user = user; // Attach user to request
+    req.user = decoded; // Attach user info to the request
     await next();
-  } catch (err) {
-    res.status(403).json({ message: "Forbidden" });
+  } catch (error) {
+    res.status(401).json({ message: "Invalid token" });
   }
 };
