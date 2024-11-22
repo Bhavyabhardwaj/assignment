@@ -1,6 +1,5 @@
 // src/controllers/userController.ts
-import prisma from "../prismaClient";
-import bcrypt from "bcrypt"
+import prisma from "../utils/prismaClient";
 import { Request, Response } from "express";
 
 export const getUsers = async (req: Request, res: Response) => {
@@ -12,6 +11,7 @@ export const getUsers = async (req: Request, res: Response) => {
   }
 };
 
+
 export const createUser = async (req: Request, res: Response) => {
   const { name, email, password, roleId } = req.body;
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -19,6 +19,7 @@ export const createUser = async (req: Request, res: Response) => {
     data: { name, email, password: hashedPassword },
   });
   res.status(201).json(user);
+};
 
 export const updateUser = async (req: Request, res: Response) => {
   const { id } = req.params;
