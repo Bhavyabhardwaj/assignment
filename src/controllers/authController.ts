@@ -1,52 +1,82 @@
 import { Request, Response } from "express";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 import prisma from "../prismaClient";
-import { generateToken } from "../utils/jwtUtils";
 
+// User Signup
 export const userSignup = async (req: Request, res: Response) => {
-  const { name, email, password, roleId } = req.body;
-  try {
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const user = await prisma.user.create({
-      data: { name, email, password: hashedPassword, roleId },
-    });
-    res.status(201).json({ message: "User registered successfully", user });
-  } catch (error) {
-    res.status(500).json({ message: "Error creating user", error });
-  }
-};
-
-export const adminSignup = async (req: Request, res: Response) => {
   const { name, email, password } = req.body;
-  try {
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const admin = await prisma.admin.create({
-      data: { name, email, password: hashedPassword },
-    });
-    res.status(201).json({ message: "Admin registered successfully", admin });
-  } catch (error) {
-    res.status(500).json({ message: "Error creating admin", error });
-  }
-};
 
-export const login = async (req: Request, res: Response) => {
-  const { email, password, isAdmin } = req.body;
   try {
-    const user = isAdmin
-      ? await prisma.admin.findUnique({ where: { email } })
-      : await prisma.user.findUnique({ where: { email }, include: { role: true } });
-
-    if (!user || !(await bcrypt.compare(password, user.password))) {
-      return res.status(401).json({ message: "Invalid email or password" });
+    // Check if user already exists
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+    if (existingUser) {
+      return res.status(400).json({ message: "User already exists" });
     }
 
-    const tokenPayload = isAdmin
-      ? { id: user.id, email: user.email, role: "Admin" }
-      : { id: user.id, email: user.email, role: user.role.name };
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    const token = generateToken(tokenPayload);
-    res.status(200).json({ message: "Login successful", token });
+    // Get the "USER" role by name
+    const userRole = await prisma.role.findUnique({ where: { name: "USER" } });
+    if (!userRole) {
+      return res.status(404).json({ message: "Role 'USER' not found" });
+    }
+
+    // Create the new user with the roleId
+    const newUser = await prisma.user.create({
+      data: {
+        name,
+        email,
+        password: hashedPassword,
+        roleId: userRole.id, // Assign the roleId
+      },
+    });
+
+    // Create JWT token
+    const token = jwt.sign({ userId: newUser.id, role: userRole.name }, "your_secret_key", { expiresIn: "1h" });
+
+    res.status(201).json({ token });
   } catch (error) {
-    res.status(500).json({ message: "Error logging in", error });
+    res.status(500).json({ message: "Error signing up user", error });
+  }
+};
+
+// Admin Signup
+export const adminSignup = async (req: Request, res: Response) => {
+  const { name, email, password } = req.body;
+
+  try {
+    // Check if admin already exists
+    const existingAdmin = await prisma.user.findUnique({ where: { email } });
+    if (existingAdmin) {
+      return res.status(400).json({ message: "Admin already exists" });
+    }
+
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Get the "ADMIN" role by name
+    const adminRole = await prisma.role.findUnique({ where: { name: "ADMIN" } });
+    if (!adminRole) {
+      return res.status(404).json({ message: "Role 'ADMIN' not found" });
+    }
+
+    // Create the new admin with the roleId
+    const newAdmin = await prisma.user.create({
+      data: {
+        name,
+        email,
+        password: hashedPassword,
+        roleId: adminRole.id, // Assign the roleId
+      },
+    });
+
+    // Create JWT token
+    const token = jwt.sign({ userId: newAdmin.id, role: adminRole.name }, "your_secret_key", { expiresIn: "1h" });
+
+    res.status(201).json({ token });
+  } catch (error) {
+    res.status(500).json({ message: "Error signing up admin", error });
   }
 };
