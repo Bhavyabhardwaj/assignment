@@ -1,12 +1,9 @@
 import express from "express";
-import { signup, login } from "../controllers/authController";
-
+import { userSignup, adminSignup, login } from "../controllers/authController";
 const router = express.Router();
 
-// Signup Endpoint
-router.post("/signup", signup);
-
-// Login Endpoint
-router.post("/login", login);
+router.post("/signup/user", userSignup); // User Signup
+router.post("/signup/admin", adminSignup); // Admin Signup
+router.post("/login", login); // Login for both Admin and Users
 
 export default router;
