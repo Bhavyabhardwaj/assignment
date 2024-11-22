@@ -7,7 +7,7 @@ const router = express.Router();
 //@ts-ignore
 router.get("/", authenticate, getPermissions);
 //@ts-ignore
-router.post("/", createPermission);
+router.post("/", authenticate, createPermission);
 //@ts-ignore
 router.delete("/:id", authenticate, deletePermission);
 
