@@ -12,7 +12,7 @@ const router = express.Router();
 
 // Admin-only routes
 //@ts-ignore
-router.get("/", authenticate, isAdmin, getUsers);
+router.get("/", authenticate, getUsers);
 //@ts-ignore
 router.post("/", authenticate, isAdmin, createUser);
 //@ts-ignore

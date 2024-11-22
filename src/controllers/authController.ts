@@ -19,11 +19,12 @@ export const userSignup = async (req: Request, res: Response) => {
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Get the "USER" role by name
-    const userRole = await prisma.role.findUnique({ where: { name: "USER" } });
-    if (!userRole) {
-      return res.status(404).json({ message: "Role 'USER' not found" });
-    }
+    // Find or create the "USER" role
+    const userRole = await prisma.role.upsert({
+      where: { name: "USER" },
+      update: {}, // No updates needed if it exists
+      create: { name: "USER" }, // Create the role if it doesn't exist
+    });
 
     // Create the new user with the roleId
     const newUser = await prisma.user.create({
@@ -58,11 +59,12 @@ export const adminSignup = async (req: Request, res: Response) => {
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Get the "ADMIN" role by name
-    const adminRole = await prisma.role.findUnique({ where: { name: "ADMIN" } });
-    if (!adminRole) {
-      return res.status(404).json({ message: "Role 'ADMIN' not found" });
-    }
+    // Find or create the "ADMIN" role
+    const adminRole = await prisma.role.upsert({
+      where: { name: "ADMIN" },
+      update: {}, // No updates needed if it exists
+      create: { name: "ADMIN" }, // Create the role if it doesn't exist
+    });
 
     // Create the new admin with the roleId
     const newAdmin = await prisma.user.create({
