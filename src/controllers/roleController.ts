@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import prisma from "../prismaClient";
 
-// Fetch all roles
+// Get all roles
 export const getRoles = async (req: Request, res: Response) => {
   try {
     const roles = await prisma.role.findMany();
@@ -19,11 +19,12 @@ export const createRole = async (req: Request, res: Response) => {
     const role = await prisma.role.create({
       data: {
         name,
-        permissions,
+        permissions: {
+          connect: permissions.map((perm: string) => ({ id: perm })),
+        },
       },
     });
-
-    res.status(201).json({ message: "Role created successfully", role });
+    res.status(201).json(role);
   } catch (error) {
     res.status(500).json({ message: "Error creating role", error });
   }
@@ -36,11 +37,15 @@ export const updateRole = async (req: Request, res: Response) => {
 
   try {
     const role = await prisma.role.update({
-      where: { id: parseInt(id) },
-      data: { name, permissions },
+      where: { id: parseInt(id)},
+      data: {
+        name,
+        permissions: {
+          connect: permissions.map((perm: string) => ({ id: perm })),
+        },
+      },
     });
-
-    res.status(200).json({ message: "Role updated successfully", role });
+    res.status(200).json(role);
   } catch (error) {
     res.status(500).json({ message: "Error updating role", error });
   }
@@ -51,9 +56,31 @@ export const deleteRole = async (req: Request, res: Response) => {
   const { id } = req.params;
 
   try {
-    await prisma.role.delete({ where: { id: parseInt(id) } });
-    res.status(200).json({ message: "Role deleted successfully" });
+    const role = await prisma.role.delete({
+      where: { id: parseInt(id)},
+    });
+    res.status(200).json({ message: "Role deleted", role });
   } catch (error) {
     res.status(500).json({ message: "Error deleting role", error });
+  }
+};
+
+// Assign permissions to role
+export const assignPermissionsToRole = async (req: Request, res: Response) => {
+  const { roleId } = req.params;
+  const { permissions } = req.body;
+
+  try {
+    const role = await prisma.role.update({
+      where: { id: parseInt(roleId) },
+      data: {
+        permissions: {
+          connect: permissions.map((perm: string) => ({ id: perm })),
+        },
+      },
+    });
+    res.status(200).json(role);
+  } catch (error) {
+    res.status(500).json({ message: "Error assigning permissions", error });
   }
 };
