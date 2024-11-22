@@ -1,5 +1,6 @@
 // src/controllers/userController.ts
-import prisma from "../utils/prismaClient";
+import prisma from "../prismaClient";
+import bcrypt from "bcrypt";
 import { Request, Response } from "express";
 
 export const getUsers = async (req: Request, res: Response) => {
